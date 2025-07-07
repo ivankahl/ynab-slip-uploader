@@ -8,19 +8,16 @@ const allowedCategories = env.YNAB_CATEGORY_GROUPS;
 const api = new ynab.API(apiKey);
 
 export const getAllEnvelopes = async () => {
-  const budget = await api.budgets.getBudgetById(budgetId);
+  const categoriesResponse = await api.categories.getCategories(budgetId);
 
   const envelopes = !allowedCategories
-    ? budget.data.budget.categories?.map((c) => c?.name || "").filter((c) => c)
-    : budget.data.budget.category_groups
-        ?.filter((c) => allowedCategories.some((ac) => ac === c.name))
-        .map((c) => c.id)
-        .map((c) =>
-          budget.data.budget.categories?.filter(
-            (cat) => cat.category_group_id === c
-          )
-        )
-        .flat()
+    ? categoriesResponse.data.category_groups
+        ?.flatMap(group => group.categories)
+        .map((c) => c?.name || "")
+        .filter((c) => c)
+    : categoriesResponse.data.category_groups
+        ?.filter((group) => allowedCategories.some((ac) => ac === group.name))
+        .flatMap(group => group.categories)
         .map((c) => c?.name || "")
         .filter((c) => c);
 
@@ -32,9 +29,9 @@ export const getAllEnvelopes = async () => {
 };
 
 export const getAllPayees = async () => {
-  const budget = await api.budgets.getBudgetById(budgetId);
+  const payeesResponse = await api.payees.getPayees(budgetId);
 
-  const payees = budget.data.budget.payees
+  const payees = payeesResponse.data.payees
     ?.filter((p) => p.name && !p.deleted)
     .map((p) => p.name);
 
@@ -64,9 +61,13 @@ export const createTransaction = async (
     amount: Math.trunc(-split.amount * 1000),
   }));
 
-  const budget = await api.budgets.getBudgetById(budgetId);
+  // Get accounts and categories in parallel for efficiency
+  const [accountsResponse, categoriesResponse] = await Promise.all([
+    api.accounts.getAccounts(budgetId),
+    api.categories.getCategories(budgetId)
+  ]);
 
-  const accountId = budget.data.budget.accounts?.find(
+  const accountId = accountsResponse.data.accounts?.find(
     (a) => a.name === accountName
   )?.id;
 
@@ -78,14 +79,14 @@ export const createTransaction = async (
   // If a transaction is split, the sum of the lineItemTotalAmounts must add up to the totalAmount for the slip. If they don't
   // we ignore the splits and just log the transaction against a single category.
   const subtransactions: ynab.SaveSubTransaction[] = fixedSplits
-    ? retrieveSubtransactions(budget, fixedTotalAmount, fixedSplits)
+    ? retrieveSubtransactions(categoriesResponse, fixedTotalAmount, fixedSplits)
     : [];
 
   let categoryId: string | undefined;
-  if (!subtransactions) {
-    categoryId = budget.data.budget.categories?.find(
-      (c) => c.name === category
-    )?.id;
+  if (!subtransactions || subtransactions.length === 0) {
+    categoryId = categoriesResponse.data.category_groups
+      ?.flatMap(group => group.categories)
+      .find((c) => c.name === category)?.id;
 
     if (!categoryId) {
       throw new Error("Category not found");
@@ -101,13 +102,13 @@ export const createTransaction = async (
       payee_name: merchant,
       approved: false,
       memo: memo,
-      subtransactions: subtransactions.length > 1 ? subtransactions : undefined,
+      subtransactions: subtransactions.length > 0 ? subtransactions : undefined,
     },
   });
 };
 
 const retrieveSubtransactions = (
-  budget: ynab.BudgetDetailResponse,
+  categoriesResponse: ynab.CategoriesResponse,
   fixedTotalAmount: number,
   fixedSplits: {
     category: string;
@@ -129,9 +130,9 @@ const retrieveSubtransactions = (
     let splitTotals: { [categoryId: string]: number } = {};
 
     for (const split of fixedSplits) {
-      const splitCategoryId = budget.data.budget.categories?.find(
-        (c) => c.name === split.category
-      )?.id;
+      const splitCategoryId = categoriesResponse.data.category_groups
+        ?.flatMap(group => group.categories)
+        .find((c) => c.name === split.category)?.id;
 
       if (!splitCategoryId) {
         console.warn(
