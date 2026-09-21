@@ -49,14 +49,12 @@ export class LocalDocumentParser implements DocumentParser {
   }
 
   private async getOcrService() {
-    if (!this.ocrServicePromise) {
-      this.ocrServicePromise = (async () => {
-        const { PaddleOcrService } = await import("ppu-paddle-ocr");
-        const service = new PaddleOcrService();
-        await service.initialize();
-        return service;
-      })();
-    }
+    this.ocrServicePromise ??= (async () => {
+      const { PaddleOcrService } = await import("ppu-paddle-ocr");
+      const service = new PaddleOcrService();
+      await service.initialize();
+      return service;
+    })();
     return this.ocrServicePromise;
   }
 

@@ -3,15 +3,13 @@ import type { BinaryDocument } from "./types";
 const MAX_PDF_IMAGE_PIXELS = 16_777_216;
 let pdfJsInitialization: Promise<void> | undefined;
 
-const initializePdfJs = async (): Promise<void> => {
-  if (!pdfJsInitialization) {
-    pdfJsInitialization = (async () => {
-      const { definePDFJSModule } = await import("unpdf");
-      await definePDFJSModule(() =>
-        import("pdfjs-dist/legacy/build/pdf.mjs")
-      );
-    })();
-  }
+const initializePdfJs = (): Promise<void> => {
+  pdfJsInitialization ??= (async () => {
+    const { definePDFJSModule } = await import("unpdf");
+    await definePDFJSModule(() =>
+      import("pdfjs-dist/legacy/build/pdf.mjs")
+    );
+  })();
   return pdfJsInitialization;
 };
 
@@ -59,7 +57,7 @@ export const renderPdfAsImages = async (
       scale: 2,
     });
     if (typeof image === "string") {
-      throw new Error("Unexpected data URL while rendering PDF page");
+      throw new TypeError("Unexpected data URL while rendering PDF page");
     }
     pages.push({ data: Buffer.from(image), mimeType: "image/png" });
   }

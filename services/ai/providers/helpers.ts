@@ -1,9 +1,15 @@
 export const parseJsonResponse = (text: string): unknown => {
   const trimmed = text.trim();
-  const withoutFence = trimmed
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```$/, "")
-    .trim();
+  let withoutFence = trimmed;
+  if (withoutFence.startsWith("```")) {
+    const firstLineBreak = withoutFence.indexOf("\n");
+    withoutFence =
+      firstLineBreak >= 0 ? withoutFence.slice(firstLineBreak + 1) : "";
+  }
+  if (withoutFence.endsWith("```")) {
+    withoutFence = withoutFence.slice(0, -3);
+  }
+  withoutFence = withoutFence.trim();
 
   try {
     return JSON.parse(withoutFence);

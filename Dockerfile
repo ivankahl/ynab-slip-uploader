@@ -17,7 +17,9 @@ ENV NODE_ENV=production
 
 RUN mkdir -p /home/bun/.cache/ppu-paddle-ocr && chown -R bun:bun /home/bun/.cache
 USER bun
-RUN bunx ppu-paddle-ocr download-models
+RUN bun node_modules/ppu-paddle-ocr/cli/index.js download-models
 
-COPY --chown=bun:bun . .
+COPY --chown=bun:bun index.ts ./
+COPY --chown=bun:bun services/ ./services/
+COPY --chown=bun:bun utils/ ./utils/
 ENTRYPOINT [ "bun", "run", "start" ]

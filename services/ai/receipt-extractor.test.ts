@@ -81,7 +81,7 @@ describe("ReceiptExtractionService", () => {
       5
     );
 
-    expect(service.parse(image, [])).rejects.toThrow(
+    await expect(service.parse(image, [])).rejects.toThrow(
       "At least one YNAB category"
     );
   });

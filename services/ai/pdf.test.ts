@@ -46,6 +46,6 @@ describe("PDF preparation", () => {
   });
 
   test("enforces the page limit", async () => {
-    expect(extractPdfText(document, 0)).rejects.toThrow("page limit");
+    await expect(extractPdfText(document, 0)).rejects.toThrow("page limit");
   });
 });
