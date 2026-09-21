@@ -8,15 +8,15 @@ const allowedCategories = env.YNAB_CATEGORY_GROUPS;
 const api = new ynab.API(apiKey);
 
 export const getAllEnvelopes = async () => {
-  const budget = await api.budgets.getBudgetById(budgetId);
+  const budget = await api.plans.getPlanById(budgetId);
 
   const envelopes = !allowedCategories
-    ? budget.data.budget.categories?.map((c) => c?.name || "").filter((c) => c)
-    : budget.data.budget.category_groups
+    ? budget.data.plan.categories?.map((c) => c?.name || "").filter((c) => c)
+    : budget.data.plan.category_groups
         ?.filter((c) => allowedCategories.some((ac) => ac === c.name))
         .map((c) => c.id)
         .map((c) =>
-          budget.data.budget.categories?.filter(
+          budget.data.plan.categories?.filter(
             (cat) => cat.category_group_id === c
           )
         )
@@ -32,9 +32,9 @@ export const getAllEnvelopes = async () => {
 };
 
 export const getAllPayees = async () => {
-  const budget = await api.budgets.getBudgetById(budgetId);
+  const budget = await api.plans.getPlanById(budgetId);
 
-  const payees = budget.data.budget.payees
+  const payees = budget.data.plan.payees
     ?.filter((p) => p.name && !p.deleted)
     .map((p) => p.name);
 
@@ -64,9 +64,9 @@ export const createTransaction = async (
     amount: Math.trunc(-split.amount * 1000),
   }));
 
-  const budget = await api.budgets.getBudgetById(budgetId);
+  const budget = await api.plans.getPlanById(budgetId);
 
-  const accountId = budget.data.budget.accounts?.find(
+  const accountId = budget.data.plan.accounts?.find(
     (a) => a.name === accountName
   )?.id;
 
@@ -83,7 +83,7 @@ export const createTransaction = async (
 
   let categoryId: string | undefined;
   if (!subtransactions) {
-    categoryId = budget.data.budget.categories?.find(
+    categoryId = budget.data.plan.categories?.find(
       (c) => c.name === category
     )?.id;
 
@@ -107,7 +107,7 @@ export const createTransaction = async (
 };
 
 const retrieveSubtransactions = (
-  budget: ynab.BudgetDetailResponse,
+  budget: ynab.PlanDetailResponse,
   fixedTotalAmount: number,
   fixedSplits: {
     category: string;
@@ -129,7 +129,7 @@ const retrieveSubtransactions = (
     let splitTotals: { [categoryId: string]: number } = {};
 
     for (const split of fixedSplits) {
-      const splitCategoryId = budget.data.budget.categories?.find(
+      const splitCategoryId = budget.data.plan.categories?.find(
         (c) => c.name === split.category
       )?.id;
 

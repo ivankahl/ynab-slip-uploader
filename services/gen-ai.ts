@@ -51,6 +51,7 @@ const getGeneratingConfig = (
             },
             category: {
               type: SchemaType.STRING,
+              format: "enum",
               enum: availableEnvelopes,
             },
           },
@@ -59,6 +60,7 @@ const getGeneratingConfig = (
       },
       category: {
         type: SchemaType.STRING,
+        format: "enum",
         enum: availableEnvelopes,
       },
     },
