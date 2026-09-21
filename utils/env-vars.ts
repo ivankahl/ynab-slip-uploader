@@ -8,7 +8,13 @@ const envScheme = z.object({
   YNAB_CATEGORY_GROUPS: z
     .string()
     .optional()
-    .transform((str) => str?.split(",") || []),
+    .transform(
+      (str) =>
+        str
+          ?.split(",")
+          .map((categoryGroup) => categoryGroup.trim())
+          .filter(Boolean) ?? []
+    ),
   YNAB_INCLUDE_PAYEES_IN_PROMPT: z.preprocess(
     (val) => `${val}`.toLowerCase() !== "false",
     z.boolean()
