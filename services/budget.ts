@@ -10,7 +10,7 @@ const api = new ynab.API(apiKey);
 export const getAllEnvelopes = async () => {
   const budget = await api.plans.getPlanById(budgetId);
 
-  const envelopes = !allowedCategories
+  const envelopes = allowedCategories.length === 0
     ? budget.data.plan.categories?.map((c) => c?.name || "").filter((c) => c)
     : budget.data.plan.category_groups
         ?.filter((c) => allowedCategories.some((ac) => ac === c.name))
