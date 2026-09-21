@@ -11,9 +11,13 @@ RUN bun install --frozen-lockfile --production
 FROM base AS release
 WORKDIR /usr/src/app
 COPY --from=install /temp/prod/node_modules node_modules
-COPY . .
+COPY --chown=bun:bun package.json ./
 
 ENV NODE_ENV=production
 
+RUN mkdir -p /home/bun/.cache/ppu-paddle-ocr && chown -R bun:bun /home/bun/.cache
 USER bun
-ENTRYPOINT [ "bun", "run", "index.ts" ]
+RUN bunx ppu-paddle-ocr download-models
+
+COPY --chown=bun:bun . .
+ENTRYPOINT [ "bun", "run", "start" ]
