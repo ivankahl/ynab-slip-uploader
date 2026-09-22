@@ -4,7 +4,7 @@ import {
   getAllEnvelopes as getAllCategories,
   getAllPayees,
 } from "./budget";
-import { parseReceipt } from "./gen-ai";
+import { parseReceipt } from "./receipt-extraction";
 import { getStorageService } from "./storage";
 import env from "../utils/env-vars";
 
@@ -19,12 +19,11 @@ export const processAndUploadReceipt = async (
   // Get the list of available YNAB categories
   const ynabCategories = await getAllCategories();
 
-  let receipt: Receipt | null = null;
-
-  let ynabPayees = env.YNAB_INCLUDE_PAYEES_IN_PROMPT
+  const ynabPayees = env.YNAB_INCLUDE_PAYEES_IN_PROMPT
     ? await getAllPayees()
     : null;
 
+  let receipt: Receipt;
   try {
     receipt = await parseReceipt(
       fileBuffer,
@@ -32,10 +31,6 @@ export const processAndUploadReceipt = async (
       ynabCategories,
       ynabPayees
     );
-
-    if (!receipt) {
-      throw new Error("Receipt was supposedly parsed but null was returned.");
-    }
   } catch (err) {
     console.error(`Failed to parse the receipt: ${err}`);
     throw new ReceiptParseError();

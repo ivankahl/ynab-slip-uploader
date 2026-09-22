@@ -1,0 +1,10 @@
+node_modules
+.git
+.kiro
+.env
+.env.*
+!.env.example
+coverage
+*.log
+.DS_Store
+**/*.test.ts

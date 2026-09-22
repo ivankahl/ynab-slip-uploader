@@ -2,6 +2,11 @@
   "name": "slips-generator",
   "module": "index.ts",
   "type": "module",
+  "scripts": {
+    "start": "bun run index.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
   "devDependencies": {
     "@types/bun": "^1.4.2"
   },
@@ -9,10 +14,20 @@
     "typescript": "^7.0.2"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "0.127.0",
     "@google/generative-ai": "^0.24.1",
     "@hono/zod-validator": "^0.9.1",
+    "@napi-rs/canvas": "1.0.9",
     "hono": "^4.13.8",
+    "onnxruntime-node": "1.30.0",
+    "openai": "7.20.0",
+    "pdfjs-dist": "6.3.289",
+    "ppu-paddle-ocr": "6.6.0",
+    "unpdf": "1.8.1",
     "ynab": "^4.5.0",
     "zod": "^4.6.5"
-  }
+  },
+  "trustedDependencies": [
+    "onnxruntime-node"
+  ]
 }
