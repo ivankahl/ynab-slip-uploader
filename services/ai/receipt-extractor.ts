@@ -27,12 +27,17 @@ export class ReceiptExtractionService {
       throw new Error("At least one YNAB category is required to parse a receipt");
     }
 
-    const parsedDocument = this.documentParser
-      ? await this.documentParser.parse(document)
-      : undefined;
-    const documents = parsedDocument
-      ? undefined
-      : await prepareVisualDocuments(document, this.maxPdfPages);
+    let parsedDocument: string | undefined;
+    let documents: BinaryDocument[] | undefined;
+
+    if (this.documentParser) {
+      parsedDocument = (await this.documentParser.parse(document)).trim();
+      if (!parsedDocument) {
+        throw new Error("Document parser produced no usable receipt text");
+      }
+    } else {
+      documents = await prepareVisualDocuments(document, this.maxPdfPages);
+    }
 
     const result = await this.provider.generateJson({
       schemaName: "receipt",

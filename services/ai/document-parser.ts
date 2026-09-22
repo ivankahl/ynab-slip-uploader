@@ -65,10 +65,11 @@ export class LocalDocumentParser implements DocumentParser {
     for (const [index, page] of pages.entries()) {
       const bytes = Uint8Array.from(page.data).buffer;
       const result = await service.recognize(bytes);
+      const text = result.text.trim();
+      if (!text) continue;
+
       output.push(
-        `[Page ${index + 1}; OCR confidence ${result.confidence.toFixed(3)}]\n${
-          result.text
-        }`
+        `[Page ${index + 1}; OCR confidence ${result.confidence.toFixed(3)}]\n${text}`
       );
     }
 
@@ -77,7 +78,9 @@ export class LocalDocumentParser implements DocumentParser {
 
   private formatPages(pages: string[], source: string): string {
     return pages
-      .map((text, index) => `[Page ${index + 1}; ${source}]\n${text}`)
+      .map((text, index) => ({ index, text: text.trim() }))
+      .filter(({ text }) => text.length > 0)
+      .map(({ index, text }) => `[Page ${index + 1}; ${source}]\n${text}`)
       .join("\n\n");
   }
 }

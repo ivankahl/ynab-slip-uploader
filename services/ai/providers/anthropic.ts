@@ -5,7 +5,11 @@ import type {
   LlmProviderConfig,
   LlmRequest,
 } from "../types";
-import { parseJsonResponse, withJsonInstructions } from "./helpers";
+import {
+  DEFAULT_LLM_TEMPERATURE,
+  parseJsonResponse,
+  withJsonInstructions,
+} from "./helpers";
 
 const toAnthropicMediaType = (
   mimeType: string
@@ -67,7 +71,7 @@ export class AnthropicProvider implements LlmProvider {
     const message = await this.client.messages.create({
       model: this.config.model,
       max_tokens: 16_384,
-      temperature: 0.2,
+      temperature: DEFAULT_LLM_TEMPERATURE,
       system: request.systemPrompt,
       messages: [{ role: "user", content }],
       ...(outputFormat

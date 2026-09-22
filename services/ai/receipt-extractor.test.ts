@@ -40,9 +40,13 @@ class FakeProvider implements LlmProvider {
 class FakeParser implements DocumentParser {
   lastDocument?: BinaryDocument;
 
+  constructor(
+    private readonly text = "Corner Shop\nMilk 4.50\nTOTAL 4.50"
+  ) {}
+
   async parse(document: BinaryDocument): Promise<string> {
     this.lastDocument = document;
-    return "Corner Shop\nMilk 4.50\nTOTAL 4.50";
+    return this.text;
   }
 }
 
@@ -72,6 +76,20 @@ describe("ReceiptExtractionService", () => {
     expect(parser.lastDocument).toEqual(image);
     expect(provider.lastRequest?.documents).toBeUndefined();
     expect(provider.lastRequest?.prompt).toContain("Corner Shop");
+  });
+
+  test("rejects empty parser output instead of falling back to images", async () => {
+    const provider = new FakeProvider();
+    const service = new ReceiptExtractionService(
+      provider,
+      new FakeParser("  \n"),
+      5
+    );
+
+    await expect(service.parse(image, ["Groceries"])).rejects.toThrow(
+      "Document parser produced no usable receipt text"
+    );
+    expect(provider.lastRequest).toBeUndefined();
   });
 
   test("requires at least one available category", async () => {

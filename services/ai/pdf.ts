@@ -1,6 +1,8 @@
 import type { BinaryDocument } from "./types";
 
 const MAX_PDF_IMAGE_PIXELS = 16_777_216;
+// Short fragments are commonly page furniture rather than usable receipt text.
+const MIN_MEANINGFUL_PDF_TEXT_CHARACTERS = 32;
 let pdfJsInitialization: Promise<void> | undefined;
 
 const initializePdfJs = (): Promise<void> => {
@@ -33,7 +35,9 @@ export const extractPdfText = async (
   const result = await extractText(pdf, { mergePages: false });
   const pages = Array.isArray(result.text) ? result.text : [result.text];
   const meaningfulCharacters = pages.join("").replace(/\s/g, "").length;
-  return meaningfulCharacters >= 32 ? pages : null;
+  return meaningfulCharacters >= MIN_MEANINGFUL_PDF_TEXT_CHARACTERS
+    ? pages
+    : null;
 };
 
 export const renderPdfAsImages = async (

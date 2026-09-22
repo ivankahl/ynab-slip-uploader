@@ -49,11 +49,18 @@ docker run \
 
 The application uses `APP_API_KEY` as the Basic authentication username and `APP_API_SECRET` as the password. `YNAB_CATEGORY_GROUPS` can contain a comma-separated list of category groups; if empty, all categories are considered.
 
-To use local parsing before a text-capable LLM, add:
+To use local parsing before a text-capable LLM, build the opt-in image target that includes PaddleOCR and its downloaded models. Put the remaining configuration from the example above in `.env`, then run:
 
 ```shell
--e RECEIPT_PARSER_PROVIDER=local
+docker build --target local-ocr -t ynab-slip-uploader:local-ocr .
+
+docker run --env-file .env \
+    -e RECEIPT_PARSER_PROVIDER=local \
+    -p 3000:3000 \
+    ynab-slip-uploader:local-ocr
 ```
+
+The default `release` target excludes the local OCR runtime and models to keep the image lean. Use `local-ocr` only when `RECEIPT_PARSER_PROVIDER=local`.
 
 To use a separate image-capable model, configure its provider and credentials:
 
@@ -106,6 +113,10 @@ If all goes well, you should receive a `200` response with the transaction detai
   ]
 }
 ```
+
+## Upgrading to v4
+
+`APP_PORT` and `MAX_FILE_SIZE` now fail application startup when set to an invalid or non-positive value, such as `abc` or `0`. Remove an invalid value to use its default (`3000` and 5 MiB, respectively), or replace it with a positive integer.
 
 ## Environment Variables
 

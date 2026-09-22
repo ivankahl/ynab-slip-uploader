@@ -1,3 +1,6 @@
+// Keep receipt transcription and extraction deterministic across providers.
+export const DEFAULT_LLM_TEMPERATURE = 0.2;
+
 export const parseJsonResponse = (text: string): unknown => {
   const trimmed = text.trim();
   let withoutFence = trimmed;

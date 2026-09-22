@@ -5,7 +5,11 @@ import type {
   LlmProviderConfig,
   LlmRequest,
 } from "../types";
-import { parseJsonResponse, withJsonInstructions } from "./helpers";
+import {
+  DEFAULT_LLM_TEMPERATURE,
+  parseJsonResponse,
+  withJsonInstructions,
+} from "./helpers";
 
 export class OpenAiProvider implements LlmProvider {
   private readonly client: OpenAI;
@@ -40,6 +44,8 @@ export class OpenAiProvider implements LlmProvider {
             type: "json_schema",
             json_schema: {
               name: request.schemaName,
+              // Non-strict mode supports schemas whose optional properties are
+              // not listed in required (for example, receipt line items).
               strict: false,
               schema: request.jsonSchema,
             },
@@ -69,7 +75,7 @@ export class OpenAiProvider implements LlmProvider {
 
     const completion = await this.client.chat.completions.create({
       model: this.config.model,
-      temperature: 0.2,
+      temperature: DEFAULT_LLM_TEMPERATURE,
       ...(this.compatibleEndpoint
         ? { max_tokens: 16_384 }
         : { max_completion_tokens: 16_384 }),

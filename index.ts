@@ -4,7 +4,12 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import env from "./utils/env-vars";
 import { logger } from "hono/logger";
-import { processAndUploadReceipt } from "./services/receipt";
+import {
+  processAndUploadReceipt,
+  ReceiptFileUploadError,
+  ReceiptParseError,
+  ReceiptYnabImportError,
+} from "./services/receipt";
 
 const app = new Hono();
 
@@ -44,12 +49,15 @@ app.post(
       const receipt = await processAndUploadReceipt(account, file);
 
       return c.json(receipt, 200);
-    } catch (err: any) {
-      console.error("Error processing receipt:", err)
-      return c.json(
-        { error: err.message || "An unknown error occurred." },
-        500
-      );
+    } catch (err: unknown) {
+      console.error("Error processing receipt:", err);
+      const message =
+        err instanceof ReceiptParseError ||
+        err instanceof ReceiptYnabImportError ||
+        err instanceof ReceiptFileUploadError
+          ? err.message
+          : "An unknown error occurred.";
+      return c.json({ error: message }, 500);
     }
   }
 );

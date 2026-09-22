@@ -5,7 +5,10 @@ import type {
   LlmProviderConfig,
   LlmRequest,
 } from "../types";
-import { parseJsonResponse } from "./helpers";
+import {
+  DEFAULT_LLM_TEMPERATURE,
+  parseJsonResponse,
+} from "./helpers";
 
 export class GeminiProvider implements LlmProvider {
   private readonly client: GoogleGenerativeAI;
@@ -56,7 +59,7 @@ export class GeminiProvider implements LlmProvider {
         },
       ],
       generationConfig: {
-        temperature: 0.2,
+        temperature: DEFAULT_LLM_TEMPERATURE,
         maxOutputTokens: 16_384,
         ...generationConfig,
       },

@@ -1,9 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { extractPdfText, renderPdfAsImages } from "./pdf";
 
-const createPdf = (): Buffer => {
-  const stream =
-    "BT /F1 18 Tf 20 100 Td (Corner Shop Receipt Total Amount 12.34 Thank You For Your Purchase) Tj ET";
+const createPdf = (
+  text = "Corner Shop Receipt Total Amount 12.34 Thank You For Your Purchase"
+): Buffer => {
+  const stream = `BT /F1 18 Tf 20 100 Td (${text}) Tj ET`;
   const objects = [
     "<< /Type /Catalog /Pages 2 0 R >>",
     "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
@@ -43,6 +44,15 @@ describe("PDF preparation", () => {
     expect(pages).toHaveLength(1);
     expect(pages[0]?.mimeType).toBe("image/png");
     expect(pages[0]?.data.subarray(1, 4).toString()).toBe("PNG");
+  });
+
+  test("rejects sparse embedded text below the meaningful-content threshold", async () => {
+    const sparseDocument = {
+      data: createPdf("Page 1"),
+      mimeType: "application/pdf",
+    };
+
+    await expect(extractPdfText(sparseDocument, 5)).resolves.toBeNull();
   });
 
   test("enforces the page limit", async () => {
